@@ -24,8 +24,7 @@ const SubscriptionCalendar: React.FC = () => {
     date: "",
   });
   const [view, setView] = useState<"calendar" | "list">("calendar");
-  const [hoveredSubscription, setHoveredSubscription] =
-    useState<Subscription | null>(null);
+  const [hoveredDate, setHoveredDate] = useState<number | null>(null);
   const subscriptionsRef = useRef<Subscription[]>([]);
 
   const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -131,55 +130,66 @@ const SubscriptionCalendar: React.FC = () => {
   };
 
   const renderCalendarView = () => (
-    <div className="grid grid-cols-7 gap-2 max-w-4xl mx-auto relative">
-      {daysOfWeek.map((day) => (
-        <div key={day} className="text-center text-sm font-semibold p-2">
-          {day}
-        </div>
-      ))}
-      {Array.from({ length: 42 }, (_, i) => {
-        const dayNumber = i - getFirstDayOfMonth(currentDate) + 1;
-        const isValidDay =
-          dayNumber > 0 && dayNumber <= getDaysInMonth(currentDate);
-        const subscription = subscriptions.find(
-          (sub) => sub.date === dayNumber,
-        );
-
-        return (
-          <div
-            key={i}
-            className={`aspect-square flex items-center justify-center rounded-lg relative ${
-              isValidDay
-                ? subscription
-                  ? subscription.color
-                  : "bg-gray-800"
-                : "bg-transparent"
-            }`}
-          >
-            {isValidDay && (
-              <>
-                <span className="text-lg">{dayNumber}</span>
-                {subscription && (
-                  <div
-                    className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full cursor-pointer"
-                    onMouseEnter={() => setHoveredSubscription(subscription)}
-                    onMouseLeave={() => setHoveredSubscription(null)}
-                  />
-                )}
-              </>
-            )}
+    <div className="scale-110 origin-top transform">
+      <div className="grid grid-cols-7 gap-1 max-w-4xl mx-auto relative">
+        {daysOfWeek.map((day) => (
+          <div key={day} className="text-center text-sm font-semibold p-2">
+            {day}
           </div>
-        );
-      })}
-      {hoveredSubscription && (
-        <div
-          className="absolute bg-gray-800 text-white p-2 rounded-lg shadow-lg z-10"
-          style={{ top: "100%", left: "50%", transform: "translateX(-50%)" }}
-        >
-          <p className="font-bold">{hoveredSubscription.name}</p>
-          <p>${hoveredSubscription.amount.toFixed(2)}</p>
-        </div>
-      )}
+        ))}
+        {Array.from({ length: 42 }, (_, i) => {
+          const dayNumber = i - getFirstDayOfMonth(currentDate) + 1;
+          const isValidDay =
+            dayNumber > 0 && dayNumber <= getDaysInMonth(currentDate);
+          const daySubscriptions = subscriptions.filter(
+            (sub) => sub.date === dayNumber,
+          );
+
+          return (
+            <div
+              key={i}
+              className={`aspect-square flex items-center justify-center rounded-md relative ${
+                isValidDay
+                  ? daySubscriptions.length > 0
+                    ? daySubscriptions[0].color
+                    : "bg-gray-800"
+                  : "bg-transparent"
+              }`}
+              onMouseEnter={() =>
+                daySubscriptions.length > 0 && setHoveredDate(dayNumber)
+              }
+              onMouseLeave={() => setHoveredDate(null)}
+            >
+              {isValidDay && (
+                <>
+                  <span className="text-lg">{dayNumber}</span>
+                  {daySubscriptions.length > 1 && (
+                    <span className="absolute top-1 right-1 text-xs font-bold bg-gray-900 rounded-full w-5 h-5 flex items-center justify-center">
+                      {daySubscriptions.length}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+        {hoveredDate && (
+          <div
+            className="absolute bg-gray-700 text-white p-4 rounded-lg shadow-lg z-10 max-w-xs"
+            style={{ top: "100%", left: "50%", transform: "translateX(-50%)" }}
+          >
+            <p className="font-bold mb-2">Subscriptions on {hoveredDate}</p>
+            {subscriptions
+              .filter((sub) => sub.date === hoveredDate)
+              .map((sub) => (
+                <div key={sub.id} className="mb-2">
+                  <p className="font-semibold">{sub.name}</p>
+                  <p>${sub.amount.toFixed(2)}</p>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -221,7 +231,7 @@ const SubscriptionCalendar: React.FC = () => {
   );
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col p-6 font-sans">
+    <div className="bg-gray-900 text-white min-h-screen flex flex-col p-8 font-sans">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">{`${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}</h2>
         <div className="flex items-center">
