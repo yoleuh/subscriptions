@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Plus, X, Calendar, List, Edit, Trash2 } from "lucide-react";
 
 interface Subscription {
@@ -12,7 +12,7 @@ interface Subscription {
 }
 
 const SubscriptionCalendar: React.FC = () => {
-  const currentDate = new Date(); // Changed from state to constant
+  const currentDate = new Date();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [monthlySpend, setMonthlySpend] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -26,6 +26,7 @@ const SubscriptionCalendar: React.FC = () => {
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [hoveredSubscription, setHoveredSubscription] =
     useState<Subscription | null>(null);
+  const subscriptionsRef = useRef<Subscription[]>([]);
 
   const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const monthNames = [
@@ -42,6 +43,27 @@ const SubscriptionCalendar: React.FC = () => {
     "November",
     "December",
   ];
+
+  useEffect(() => {
+    const savedSubscriptions = localStorage.getItem("subscriptions");
+    if (savedSubscriptions) {
+      try {
+        const parsedSubscriptions = JSON.parse(savedSubscriptions);
+        setSubscriptions(parsedSubscriptions);
+        subscriptionsRef.current = parsedSubscriptions;
+      } catch (error) {
+        console.error("Failed to parse saved subscriptions:", error);
+        setSubscriptions([]);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (subscriptions !== subscriptionsRef.current) {
+      localStorage.setItem("subscriptions", JSON.stringify(subscriptions));
+      subscriptionsRef.current = subscriptions;
+    }
+  }, [subscriptions]);
 
   const calculateMonthlySpend = useCallback(() => {
     const total = subscriptions.reduce((sum, sub) => sum + sub.amount, 0);
@@ -73,7 +95,7 @@ const SubscriptionCalendar: React.FC = () => {
         date: parseInt(newSubscription.date),
         color: getRandomColor(),
       };
-      setSubscriptions([...subscriptions, newSub]);
+      setSubscriptions((prevSubscriptions) => [...prevSubscriptions, newSub]);
       setNewSubscription({ name: "", amount: "", date: "" });
       setShowAddForm(false);
     }
@@ -81,8 +103,8 @@ const SubscriptionCalendar: React.FC = () => {
 
   const editSubscription = () => {
     if (editingSubscription) {
-      setSubscriptions(
-        subscriptions.map((sub) =>
+      setSubscriptions((prevSubscriptions) =>
+        prevSubscriptions.map((sub) =>
           sub.id === editingSubscription.id ? editingSubscription : sub,
         ),
       );
@@ -91,7 +113,9 @@ const SubscriptionCalendar: React.FC = () => {
   };
 
   const deleteSubscription = (id: string) => {
-    setSubscriptions(subscriptions.filter((sub) => sub.id !== id));
+    setSubscriptions((prevSubscriptions) =>
+      prevSubscriptions.filter((sub) => sub.id !== id),
+    );
   };
 
   const getRandomColor = () => {
