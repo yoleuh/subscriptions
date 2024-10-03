@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Plus, X, Calendar, List, Edit, Trash2 } from "lucide-react";
 
 interface Subscription {
@@ -12,7 +12,7 @@ interface Subscription {
 }
 
 const SubscriptionCalendar: React.FC = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const currentDate = new Date(); // Changed from state to constant
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [monthlySpend, setMonthlySpend] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -43,14 +43,14 @@ const SubscriptionCalendar: React.FC = () => {
     "December",
   ];
 
-  useEffect(() => {
-    calculateMonthlySpend();
-  }, [subscriptions]);
-
-  const calculateMonthlySpend = () => {
+  const calculateMonthlySpend = useCallback(() => {
     const total = subscriptions.reduce((sum, sub) => sum + sub.amount, 0);
     setMonthlySpend(total);
-  };
+  }, [subscriptions]);
+
+  useEffect(() => {
+    calculateMonthlySpend();
+  }, [calculateMonthlySpend]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
