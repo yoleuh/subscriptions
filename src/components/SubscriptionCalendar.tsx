@@ -249,28 +249,23 @@ const SubscriptionCalendar: React.FC = () => {
           </button>
           <button
             onClick={() => setView("list")}
-            className={`p-2 rounded-lg ${
+            className={`mr-2 p-2 rounded-lg ${
               view === "list" ? "bg-blue-500" : "bg-gray-700"
             }`}
           >
             <List size={20} />
+          </button>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="p-2 bg-green-500 hover:bg-green-600 rounded-lg"
+          >
+            <Plus size={20} />
           </button>
         </div>
       </div>
 
       <div className="flex-grow flex items-center justify-center mb-6">
         {view === "calendar" ? renderCalendarView() : renderListView()}
-      </div>
-
-      <div className="flex justify-center">
-        {!showAddForm && !editingSubscription && (
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg"
-          >
-            <Plus className="mr-2" /> Add Subscription
-          </button>
-        )}
       </div>
 
       {(showAddForm || editingSubscription) && (
